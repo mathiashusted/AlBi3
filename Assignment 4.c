@@ -6,10 +6,16 @@
 #define MATRIX_SIZE 5
 
 
+
+typedef struct {
+    char first;
+    char second;
+} Tuple;
+
 // Define a (constant) 10x10 matrix data type
 
 typedef struct {
-    char indices[MATRIX_SIZE];
+    Tuple indices[MATRIX_SIZE];
     int columns[MATRIX_SIZE][MATRIX_SIZE];
 } DistanceMatrix;
 
@@ -30,7 +36,7 @@ DistanceMatrix load_distance_matrix(char* filename) {
         exit(1);
     }
 
-    char line[100];
+    char line[MATRIX_SIZE*MATRIX_SIZE];
     char *token;
     int row = 0;
     int col = 0;
@@ -42,8 +48,9 @@ DistanceMatrix load_distance_matrix(char* filename) {
             token = strtok(line, " ");
             int i = 0;
             while (token != NULL && i < MATRIX_SIZE) {
-                matrix.indices[i] = token[0];
-                printf("%c ", matrix.indices[i]);
+                matrix.indices[i].first = token[0];
+                matrix.indices[i].second = '\0';
+                printf("%c ", matrix.indices[i].first);
                 token = strtok(NULL, " ");
                 i++;
             }
@@ -89,13 +96,34 @@ void upgma_algo(DistanceMatrix input) {
             }
         }
         // Create cluster at this position
-        clusters[cluster_size].i = input.indices[min_pos_i];
-        clusters[cluster_size].j = input.indices[min_pos_j];
+        clusters[cluster_size].i = input.indices[min_pos_i].first;
+        clusters[cluster_size].j = input.indices[min_pos_j].first;
         clusters[cluster_size].pos_i = min_pos_i;
         clusters[cluster_size].pos_j = min_pos_j;
         clusters[cluster_size].height = (float)min / 2;
         printf("Cluster created at %d, %d with characters %c, %c and height %f", min_pos_i, min_pos_j, clusters[cluster_size].i, clusters[cluster_size].j, clusters[cluster_size].height);
+        
+        // Create new cluster
+        for (int i = 0; i < MATRIX_SIZE - cluster_size; i++) {
+        }
+
+        clusters[cluster_size].next_matrix.indices[0].first = clusters[cluster_size].i;
+        clusters[cluster_size].next_matrix.indices[0].second = clusters[cluster_size].j;
+        // Create next matrix
+
+        for (int i = 0; i < MATRIX_SIZE; i++) {
+            if (i == min_pos_i || i == min_pos_j) continue;
+            int dA = input.columns[min_pos_i][i];
+            int dB = input.columns[min_pos_j][i];
+            int dNew = (dA + dB) / 2;
+            input.columns[min_pos_i][i] = dNew;
+            input.columns[i][min_pos_i] = dNew;
+        }
+        input.indices[min_pos_i].first = 'X';
+        input.indices[min_pos_j].first = '-';
         cluster_size++;
+
+
 
         return;
 
